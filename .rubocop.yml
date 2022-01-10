@@ -8,6 +8,10 @@ Lint/EmptyClass:
     - "spec/fixtures/class_without_sig.rb"
     - "spec/fixtures/class_with_sig.rb"
 
+Metrics/BlockLength:
+  Exclude:
+    - "kontainer.gemspec"
+    - "spec/**/*_spec.rb"
 Style/StringLiterals:
   Enabled: true
   EnforcedStyle: double_quotes

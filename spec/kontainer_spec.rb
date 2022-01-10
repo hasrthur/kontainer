@@ -1,26 +1,65 @@
 # frozen_string_literal: true
 
 RSpec.describe Kontainer do
-  it "does not support classes without signatures" do
-    expect do
-      Kontainer.new do
-        add Fixtures::ClassWithoutSig
-      end
-    end.to raise_error(
-      Kontainer::TypeWithoutSignatureError,
-      "'#{Fixtures::ClassWithoutSig}' can't be registered without .rbs file."
-    )
+  describe "adding" do
+    it "does not support classes without signatures" do
+      expect do
+        Kontainer.new do
+          add Fixtures::ClassWithoutSig
+        end
+      end.to raise_error(
+        Kontainer::TypeWithoutSignatureError,
+        "'#{Fixtures::ClassWithoutSig}' can't be registered without .rbs file."
+      )
+    end
+
+    it "supports classes with signatures" do
+      expect do
+        Kontainer.new do
+          add_sigs "spec/fixtures/sig"
+
+          add Fixtures::ClassWithSig
+        end
+      end.to_not raise_error
+    end
+
+    it "doesn't add classes which have overloaded initializers"
+    it "doesn't add classes which have optional keywords in initializer"
+    it "doesn't add classes which have optional positionals in initializer"
+    it "doesn't add classes which have block in initializer"
+    it "doesn't add classes which depend on themselves"
   end
 
-  it "supports classes with signatures" do
-    expect do
+  describe "validate" do
+    it "raises when there are types which depend on types which has never been added to kontainer"
+    it "raises when there are types which create circular dependency on other types"
+  end
+
+  describe "resolving" do
+    let(:kontainer) do
       Kontainer.new do
         add_sigs "spec/fixtures/sig"
 
         add Fixtures::ClassWithSig
+        add Fixtures::ClassWithOnePositionalDependency
+        add Fixtures::ClassWithOneKeywordDependency
       end
-    end.to_not raise_error
-  end
+    end
 
-  it "doesn't allow to add the same type twice"
+    it "resolves added types" do
+      expect(kontainer.resolve(Fixtures::ClassWithSig)).to be_an Fixtures::ClassWithSig
+    end
+
+    it "resolves added types with their dependencies as required positionals" do
+      object = kontainer.resolve(Fixtures::ClassWithOnePositionalDependency)
+
+      expect(object.dependency).to be_an Fixtures::ClassWithSig
+    end
+
+    it "resolves added types with their dependencies as required keywords" do
+      object = kontainer.resolve(Fixtures::ClassWithOneKeywordDependency)
+
+      expect(object.dependency).to be_an Fixtures::ClassWithSig
+    end
+  end
 end

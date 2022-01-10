@@ -1,0 +1,7 @@
+module Fixtures
+  class ClassWithOneKeywordDependency
+    attr_reader dependency: ClassWithSig
+
+    def initialize: (dependency: ClassWithSig) -> void
+  end
+end

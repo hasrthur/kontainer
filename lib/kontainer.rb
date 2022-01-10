@@ -14,7 +14,7 @@ module Kontainer
   end
 
   def self.new(&block)
-    TypesRegistry.new.instance_exec(&block)
+    TypesRegistry.new.tap { |r| r.instance_exec(&block) }
   end
 
   # Deals with registration and resolving of services
@@ -28,22 +28,51 @@ module Kontainer
     def add(type)
       ensure_rbs_loaded
 
-      *namespace, type_name = type.to_s.split("::")
+      rbs_type = rbs_type_from(type)
+      raise TypeWithoutSignatureError, type if @rbs_environment.class_decls[rbs_type].nil?
 
-      rbs_type = RBS::TypeName.new(name: type_name.to_sym, namespace: Namespace(namespace.join("::")).absolute!)
-      rbs_declaration = @rbs_environment.class_decls[rbs_type]
+      types_hash[type] = @rbs_builder.build_instance(rbs_type)
+    end
 
-      raise TypeWithoutSignatureError, type if rbs_declaration.nil?
+    def resolve(type)
+      definition = types_hash[type].methods[:initialize].defs.first
+
+      type.new(
+        *positional_args_of(definition),
+        **keyword_args_of(definition)
+      )
     end
 
     private
 
-    def types_hash
-      @types_hash ||= {}
+    def positional_args_of(definition)
+      definition
+        .type # RBS::MethodType
+        .type # RBS::Types::Function
+        .required_positionals # [RBS::Types::Function::Param]
+        .map(&method(:make_instance))
     end
 
-    def paths
-      @paths ||= []
+    def keyword_args_of(definition)
+      definition
+        .type # RBS::MethodType
+        .type # RBS::Types::Function
+        .required_keywords # [[Symbol, RBS::Types::Function::Param]]
+        .transform_values(&method(:make_instance))
+    end
+
+    def constantize_rbs_type(type)
+      Object.const_get(type.type.name.to_s)
+    end
+
+    def make_instance(type)
+      constantize_rbs_type(type).new
+    end
+
+    def rbs_type_from(type)
+      *namespace, type_name = type.to_s.split("::")
+
+      RBS::TypeName.new(name: type_name.to_sym, namespace: Namespace(namespace.join("::")).absolute!)
     end
 
     def ensure_rbs_loaded
@@ -57,7 +86,14 @@ module Kontainer
       @rbs_environment = RBS::Environment.from_loader(loader).resolve_type_names
       @rbs_builder = RBS::DefinitionBuilder.new(env: @rbs_environment)
     end
-  end
 
+    def types_hash
+      @types_hash ||= {}
+    end
+
+    def paths
+      @paths ||= []
+    end
+  end
   private_constant :TypesRegistry
 end
