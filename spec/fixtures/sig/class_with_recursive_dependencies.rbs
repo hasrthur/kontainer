@@ -1,0 +1,9 @@
+module Fixtures
+  class ClassWithRecursiveDependencies
+    attr_reader recursive_dependency: ClassWithOneKeywordDependency
+    attr_reader simple_dependency: ClassWithSig
+    attr_reader dep_one: ClassWithOnePositionalDependency
+
+    def initialize: (ClassWithOneKeywordDependency, ClassWithSig, dep_one: ClassWithOnePositionalDependency) -> void
+  end
+end

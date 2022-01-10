@@ -50,7 +50,7 @@ module Kontainer
         .type # RBS::MethodType
         .type # RBS::Types::Function
         .required_positionals # [RBS::Types::Function::Param]
-        .map(&method(:make_instance))
+        .map(&method(:resolve_arg))
     end
 
     def keyword_args_of(definition)
@@ -58,15 +58,15 @@ module Kontainer
         .type # RBS::MethodType
         .type # RBS::Types::Function
         .required_keywords # [[Symbol, RBS::Types::Function::Param]]
-        .transform_values(&method(:make_instance))
+        .transform_values(&method(:resolve_arg))
     end
 
     def constantize_rbs_type(type)
       Object.const_get(type.type.name.to_s)
     end
 
-    def make_instance(type)
-      constantize_rbs_type(type).new
+    def resolve_arg(type)
+      resolve(constantize_rbs_type(type))
     end
 
     def rbs_type_from(type)
@@ -80,8 +80,9 @@ module Kontainer
     end
 
     def build_rbs
-      loader = RBS::EnvironmentLoader.new
-      paths.each { |p| loader.add(path: Pathname(p)) }
+      loader = RBS::EnvironmentLoader.new.tap do |l|
+        paths.each { |p| l.add(path: Pathname(p)) }
+      end
 
       @rbs_environment = RBS::Environment.from_loader(loader).resolve_type_names
       @rbs_builder = RBS::DefinitionBuilder.new(env: @rbs_environment)

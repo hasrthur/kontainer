@@ -43,6 +43,7 @@ RSpec.describe Kontainer do
         add Fixtures::ClassWithSig
         add Fixtures::ClassWithOnePositionalDependency
         add Fixtures::ClassWithOneKeywordDependency
+        add Fixtures::ClassWithRecursiveDependencies
       end
     end
 
@@ -60,6 +61,18 @@ RSpec.describe Kontainer do
       object = kontainer.resolve(Fixtures::ClassWithOneKeywordDependency)
 
       expect(object.dependency).to be_an Fixtures::ClassWithSig
+    end
+
+    it "resolves added types and their dependencies recursively" do
+      object = kontainer.resolve(Fixtures::ClassWithRecursiveDependencies)
+
+      expect(object.recursive_dependency).to be_an Fixtures::ClassWithOneKeywordDependency
+      expect(object.recursive_dependency.dependency).to be_an Fixtures::ClassWithSig
+
+      expect(object.simple_dependency).to be_an Fixtures::ClassWithSig
+
+      expect(object.dep_one).to be_an Fixtures::ClassWithOnePositionalDependency
+      expect(object.dep_one.dependency).to be_an Fixtures::ClassWithSig
     end
   end
 end
