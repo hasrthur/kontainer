@@ -1,7 +1,12 @@
 AllCops:
-  TargetRubyVersion: 3.0.3
+  TargetRubyVersion: 2.7
   NewCops: enable
   SuggestExtensions: false
+
+Lint/EmptyClass:
+  Exclude:
+    - "spec/fixtures/class_without_sig.rb"
+    - "spec/fixtures/class_with_sig.rb"
 
 Style/StringLiterals:
   Enabled: true

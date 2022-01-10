@@ -8,11 +8,11 @@ Gem::Specification.new do |spec|
   spec.authors = ["Artur Borysov"]
   spec.email = ["arthur.borisow@gmail.com"]
 
-  spec.summary = "Ioc container for ruby 3+"
-  spec.description = "Ioc container for ruby 3+"
+  spec.summary = "Ioc container for ruby 2.7+"
+  spec.description = "Ioc container for ruby 2.7+"
   spec.homepage = "https://github.com/hasrthur/kontainer"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.0.0"
+  spec.required_ruby_version = ">= 2.7"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/hasrthur/kontainer"
@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rbs", "~> 2.0"
 
+  spec.add_development_dependency "pry"
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rubocop", "~> 1.21"

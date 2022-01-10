@@ -1,0 +1,3 @@
+module Kontainer
+  VERSION: String
+end

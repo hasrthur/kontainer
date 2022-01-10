@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "kontainer"
+require "fixtures/class_without_sig"
+require "fixtures/class_with_sig"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
