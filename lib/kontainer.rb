@@ -25,19 +25,30 @@ module Kontainer
       build_rbs
     end
 
-    def add(type)
+    def add(type, as: type.to_s)
       ensure_rbs_loaded
 
-      rbs_type = rbs_type_from(type)
-      raise TypeWithoutSignatureError, type if @rbs_environment.class_decls[rbs_type].nil?
+      type = type.to_s
+      as_type = as.to_s
 
-      types_hash[type] = @rbs_builder.build_instance(rbs_type)
+      rbs_type = rbs_type_from(type)
+      rbs_as_type = rbs_type_from(as_type)
+
+      raise TypeWithoutSignatureError, type unless typed?(rbs_type)
+      raise TypeWithoutSignatureError, as_type unless typed?(rbs_as_type)
+
+      types_hash[as_type] = {
+        type_to_build: Object.const_get(rbs_type.to_s),
+        rbs_instance: @rbs_builder.build_instance(rbs_type)
+      }
     end
 
     def resolve(type)
-      definition = types_hash[type].methods[:initialize].defs.first
+      type = type.to_s
 
-      type.new(
+      definition = types_hash[type][:rbs_instance].methods[:initialize].defs.first
+
+      types_hash[type][:type_to_build].new(
         *positional_args_of(definition),
         **keyword_args_of(definition)
       )
@@ -70,7 +81,7 @@ module Kontainer
     end
 
     def rbs_type_from(type)
-      *namespace, type_name = type.to_s.split("::")
+      *namespace, type_name = type.split("::")
 
       RBS::TypeName.new(name: type_name.to_sym, namespace: Namespace(namespace.join("::")).absolute!)
     end
@@ -88,6 +99,10 @@ module Kontainer
       @rbs_builder = RBS::DefinitionBuilder.new(env: @rbs_environment)
     end
 
+    def typed?(rbs_type)
+      !!(@rbs_environment.class_decls[rbs_type] || @rbs_environment.interface_decls[rbs_type])
+    end
+
     def types_hash
       @types_hash ||= {}
     end
@@ -96,5 +111,6 @@ module Kontainer
       @paths ||= []
     end
   end
+
   private_constant :TypesRegistry
 end

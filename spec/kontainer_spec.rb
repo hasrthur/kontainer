@@ -44,6 +44,8 @@ RSpec.describe Kontainer do
         add Fixtures::ClassWithOnePositionalDependency
         add Fixtures::ClassWithOneKeywordDependency
         add Fixtures::ClassWithRecursiveDependencies
+
+        add Fixtures::ClassWithInterface, as: "::Fixtures::_SimpleInterface"
       end
     end
 
@@ -73,6 +75,13 @@ RSpec.describe Kontainer do
 
       expect(object.dep_one).to be_an Fixtures::ClassWithOnePositionalDependency
       expect(object.dep_one.dependency).to be_an Fixtures::ClassWithSig
+    end
+
+    it "resolves added types by interface" do
+      object = kontainer.resolve("::Fixtures::_SimpleInterface")
+
+      expect(object).to be_an Fixtures::ClassWithInterface
+      expect(object.call).to eq 42
     end
   end
 end

@@ -1,0 +1,5 @@
+module Fixtures
+  interface _SimpleInterface
+    def call: () -> String
+  end
+end

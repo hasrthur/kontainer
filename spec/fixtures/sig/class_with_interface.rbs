@@ -1,0 +1,5 @@
+module Fixtures
+  class ClassWithInterface
+    include _SimpleInterface
+  end
+end
