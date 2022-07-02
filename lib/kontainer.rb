@@ -7,7 +7,7 @@ require_relative "kontainer/version"
 # Entrypoint module of IoC container
 module Kontainer
   # Raised when the type is added to the container missing rbs signature
-  class TypeWithoutSignatureError <    StandardError
+  class TypeWithoutSignatureError < StandardError
     def initialize(type)
       super("'#{type}' can't be registered without .rbs file.")
     end
