@@ -12,18 +12,18 @@ permissions: {}
 jobs:
   checkout:
     runs-on: ubuntu-latest
-    name: Ruby ${{ matrix.ruby }}
-    strategy:
-      matrix:
-        ruby:
-#          - '2.7.3'
-#          - '3.0.3'`
-          - '3.1.0'
     permissions:
       contents: read
     steps:
     - uses: actions/checkout@v2
   rubocop:
+    name: Ruby ${{ matrix.ruby }}
+    strategy:
+      matrix:
+        ruby:
+          #          - '2.7.3'
+          #          - '3.0.3'`
+          - '3.1.0'
     runs-on: ubuntu-latest
     steps:
     - name: Set up Ruby
