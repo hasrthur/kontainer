@@ -10,7 +10,7 @@ on:
 permissions: {}
 
 jobs:
-  build:
+  checkout:
     runs-on: ubuntu-latest
     name: Ruby ${{ matrix.ruby }}
     strategy:
@@ -19,11 +19,13 @@ jobs:
 #          - '2.7.3'
 #          - '3.0.3'`
           - '3.1.0'
-
+    permissions:
+      contents: read
     steps:
     - uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+  rubocop:
+    runs-on: ubuntu-latest
+    steps:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
