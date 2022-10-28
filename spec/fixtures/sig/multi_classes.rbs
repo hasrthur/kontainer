@@ -1,0 +1,9 @@
+module Fixtures
+  class MultiClassOne
+    include _MultiInterface
+  end
+
+  class MultiClassTwo
+    include _MultiInterface
+  end
+end

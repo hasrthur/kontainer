@@ -28,6 +28,9 @@ RSpec.describe Kontainer do
     it "doesn't add classes which have optional positionals in initializer"
     it "doesn't add classes which have block in initializer"
     it "doesn't add classes which depend on themselves"
+    it "doesn't add classes identified by classes if the former doesn't inherit from the latter"
+    it "doesn't add class identified by interface if it doesn't conform to that interface"
+    it "doesn't add interface identified by interface"
   end
 
   describe "validate" do
@@ -46,6 +49,10 @@ RSpec.describe Kontainer do
         add Fixtures::ClassWithRecursiveDependencies
 
         add Fixtures::ClassWithInterface, as: "::Fixtures::_SimpleInterface"
+
+        add Fixtures::MultiClassOne, as: "::Fixtures::_MultiInterface"
+        add Fixtures::MultiClassTwo, as: "::Fixtures::_MultiInterface"
+        add Fixtures::ClassWithMultiClassesDependencies
       end
     end
 
@@ -83,5 +90,19 @@ RSpec.describe Kontainer do
       expect(object).to be_an Fixtures::ClassWithInterface
       expect(object.call).to eq 42
     end
+
+    it "resolves enumerable of added services" do
+      object = kontainer.resolve(Fixtures::ClassWithMultiClassesDependencies)
+
+      expect(object.dependencies.count).to eq 2
+
+      expect(object.dependencies.first).to be_an Fixtures::MultiClassOne
+      expect(object.dependencies.first.call_again).to eq 17
+
+      expect(object.dependencies.last).to be_an Fixtures::MultiClassTwo
+      expect(object.dependencies.last.call_again).to eq 44
+    end
+
+    it "resolves array of added services"
   end
 end
