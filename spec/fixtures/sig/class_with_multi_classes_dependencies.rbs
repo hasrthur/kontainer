@@ -1,0 +1,7 @@
+module Fixtures
+  class ClassWithMultiClassesDependencies
+    attr_reader dependencies: Enumerable[_MultiInterface]
+
+    def initialize: (Enumerable[_MultiInterface]) -> void
+  end
+end

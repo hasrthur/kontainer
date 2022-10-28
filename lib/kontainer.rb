@@ -19,38 +19,66 @@ module Kontainer
 
   # Deals with registration and resolving of services
   class TypesRegistry
+    ENUMERABLE_TYPE = TypeName("Enumerable").absolute!
+    private_constant :ENUMERABLE_TYPE
+
+    ID = ->(x) { x }
+    private_constant :ID
+
     def add_sigs(path)
       paths << path
 
       build_rbs
     end
 
-    def add(type)
+    def add(type, as: type.to_s)
       ensure_rbs_loaded
 
-      rbs_type = rbs_type_from(type)
-      raise TypeWithoutSignatureError, type if @rbs_environment.class_decls[rbs_type].nil?
+      type = type.to_s
+      as_type = as.to_s
 
-      types_hash[type] = @rbs_builder.build_instance(rbs_type)
+      rbs_type = rbs_type_from(type)
+      rbs_as_type = rbs_type_from(as_type)
+
+      raise TypeWithoutSignatureError, type unless typed?(rbs_type)
+      raise TypeWithoutSignatureError, as_type unless typed?(rbs_as_type)
+
+      types_hash[as_type] << {
+        type_to_build: Object.const_get(rbs_type.to_s),
+        rbs_instance: @rbs_builder.build_instance(rbs_type)
+      }
     end
 
     def resolve(type)
-      definition = types_hash[type].methods[:initialize].defs.first
+      resolve_by_limit(type) { _1.slice(-1, 1) }.first
+    end
 
-      type.new(
-        *positional_args_of(definition),
-        **keyword_args_of(definition)
-      )
+    def resolve_all(type)
+      resolve_by_limit(type)
     end
 
     private
+
+    def type_descriptors(type, &block)
+      (block || ID).call(types_hash[type.to_s])
+    end
+
+    def resolve_by_limit(...)
+      type_descriptors(...).map do |d|
+        definition = d[:rbs_instance].methods[:initialize].defs.first
+        d[:type_to_build].new(
+          *positional_args_of(definition),
+          **keyword_args_of(definition)
+        )
+      end
+    end
 
     def positional_args_of(definition)
       definition
         .type # RBS::MethodType
         .type # RBS::Types::Function
         .required_positionals # [RBS::Types::Function::Param]
-        .map(&method(:resolve_arg))
+        .map { resolve_arg(_1.type) }
     end
 
     def keyword_args_of(definition)
@@ -58,19 +86,25 @@ module Kontainer
         .type # RBS::MethodType
         .type # RBS::Types::Function
         .required_keywords # [[Symbol, RBS::Types::Function::Param]]
-        .transform_values(&method(:resolve_arg))
+        .transform_values { resolve_arg(_1.type) }
     end
 
     def constantize_rbs_type(type)
-      Object.const_get(type.type.name.to_s)
+      Object.const_get(type.name.to_s)
     end
 
     def resolve_arg(type)
+      return resolve_all(type.args.first) if enumerable?(type)
+
       resolve(constantize_rbs_type(type))
     end
 
+    def enumerable?(type)
+      type.name == ENUMERABLE_TYPE
+    end
+
     def rbs_type_from(type)
-      *namespace, type_name = type.to_s.split("::")
+      *namespace, type_name = type.split("::")
 
       RBS::TypeName.new(name: type_name.to_sym, namespace: Namespace(namespace.join("::")).absolute!)
     end
@@ -88,13 +122,18 @@ module Kontainer
       @rbs_builder = RBS::DefinitionBuilder.new(env: @rbs_environment)
     end
 
+    def typed?(rbs_type)
+      !!(@rbs_environment.class_decls[rbs_type] || @rbs_environment.interface_decls[rbs_type])
+    end
+
     def types_hash
-      @types_hash ||= {}
+      @types_hash ||= Hash.new { |hash, key| hash[key] = [] }
     end
 
     def paths
       @paths ||= []
     end
   end
+
   private_constant :TypesRegistry
 end

@@ -1,0 +1,5 @@
+module Fixtures
+  interface _MultiInterface
+    def call_again: () -> String
+  end
+end
