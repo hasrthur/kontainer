@@ -2,30 +2,30 @@
 module Kontainer
   # Raised when the type is added to the container missing rbs signature
   class TypeWithoutSignatureError < StandardError
-    def initialize: (String `type`) -> void
+    def initialize: (untyped `type`) -> void
   end
 
-  def self.new: () { (TypesRegistry) -> void } -> TypesRegistry
+  def self.new: () { () [self: TypesRegistry] -> untyped } -> untyped
 
   # Deals with registration and resolving of services
   class TypesRegistry
-    ENUMERABLE_TYPE: RBS::TypeName
+    ENUMERABLE_TYPE: untyped
 
-    ID: ^(any) -> any
+    ID: untyped
 
-    def add_sigs: (String path) -> void
+    def add_sigs: (untyped path) -> untyped
 
-    def add: (Class `type`, ?as: String as) -> void
+    def add: (untyped `type`, ?as: untyped) -> untyped
 
-    def resolve: (Class | String `type`) -> any
+    def resolve: (untyped `type`) -> untyped
 
-    def resolve_all: (Class | String `type`) -> [any]
+    def resolve_all: (untyped `type`) -> untyped
 
     private
 
-    def type_descriptors: (untyped `type`) { () -> untyped } -> untyped
+    def type_descriptors: (untyped `type`) ?{ () -> untyped } -> untyped
 
-    def resolve_by_limit: (*untyped) ?{ () -> untyped } -> untyped
+    def resolve_by_limit: (untyped) -> untyped
 
     def positional_args_of: (untyped definition) -> untyped
 
@@ -39,7 +39,7 @@ module Kontainer
 
     def rbs_type_from: (untyped `type`) -> untyped
 
-    def ensure_rbs_loaded: () -> untyped
+    def ensure_rbs_loaded: () -> (untyped | nil)
 
     def build_rbs: () -> untyped
 
@@ -48,5 +48,10 @@ module Kontainer
     def types_hash: () -> untyped
 
     def paths: () -> untyped
+
+    @paths: Array[String]
+    @types_hash: Hash[untyped, untyped]
+    @rbs_builder: untyped
+    @rbs_environment: untyped
   end
 end

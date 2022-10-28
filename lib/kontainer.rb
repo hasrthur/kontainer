@@ -50,7 +50,7 @@ module Kontainer
     end
 
     def resolve(type)
-      resolve_by_limit(type) { _1.slice(-1, 1) }.first
+      resolve_by_limit(type).last
     end
 
     def resolve_all(type)
@@ -63,8 +63,8 @@ module Kontainer
       (block || ID).call(types_hash[type.to_s])
     end
 
-    def resolve_by_limit(...)
-      type_descriptors(...).map do |d|
+    def resolve_by_limit(type)
+      type_descriptors(type).map do |d|
         definition = d[:rbs_instance].methods[:initialize].defs.first
         d[:type_to_build].new(
           *positional_args_of(definition),
